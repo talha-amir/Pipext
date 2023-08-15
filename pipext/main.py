@@ -4,10 +4,14 @@ import subprocess
 def get_installed_version(package_name):
     """Get the version of an installed package."""
     installed_packages = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']).decode('utf-8').splitlines()
-    for package in installed_packages:
-        if package.startswith(package_name + '=='):
-            return package
-    return None
+    return next(
+        (
+            package
+            for package in installed_packages
+            if package.startswith(f'{package_name}==')
+        ),
+        None,
+    )
 
 def comment_out_package_in_requirements(package_name):
     """Comment out a package in requirements.txt."""
@@ -45,11 +49,7 @@ def install_and_update_requirements(package_name):
     # Use pip to install the package
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
 
-    # Get the installed version
-    installed_version = get_installed_version(package_name)
-
-    # Uncomment or append to requirements.txt
-    if installed_version:
+    if installed_version := get_installed_version(package_name):
         uncomment_or_append_in_requirements(installed_version)
         print(f"Updated requirements.txt with {installed_version}")
     else:
